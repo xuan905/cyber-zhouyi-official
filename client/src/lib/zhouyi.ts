@@ -1,5 +1,9 @@
 export type HexagramId = number;
+import content from "../data/zhouyi-content.json";
+
 export type LineValue = 6 | 7 | 8 | 9;
+
+type LocalizedText = { "zh-TW": string; "zh-CN": string; en: string };
 
 export type HexagramProfile = {
   id: HexagramId;
@@ -8,6 +12,7 @@ export type HexagramProfile = {
   theme: { "zh-TW": string; "zh-CN": string; en: string };
   reading: { "zh-TW": string; "zh-CN": string; en: string };
   advice: { "zh-TW": string; "zh-CN": string; en: string };
+  detail: LocalizedText;
   keywords: { "zh-TW": string[]; "zh-CN": string[]; en: string[] };
   action: { "zh-TW": string[]; "zh-CN": string[]; en: string[] };
 };
@@ -139,6 +144,16 @@ const patternNames: Record<string, [string, string, string]> = {
   "100010": ["水雷屯", "水雷屯", "Difficulty at the Beginning"],
 };
 
+const detailedContent = content.details as Record<string, { detail: LocalizedText }>;
+
+export type QuickQuestion = {
+  id: number;
+  category: LocalizedText;
+  question: LocalizedText;
+};
+
+export const quickQuestions = content.quickQuestions as QuickQuestion[];
+
 export const hexagrams: Record<number, HexagramProfile> = Object.fromEntries(
   nameTriples.map(([traditional, simplified, english], index) => {
     const id = index + 1;
@@ -159,6 +174,11 @@ export const hexagrams: Record<number, HexagramProfile> = Object.fromEntries(
         "zh-TW": "以清楚的問題換來清楚的下一步；保持彈性，也保留原則。",
         "zh-CN": "以清楚的问题换来清楚的下一步；保持弹性，也保留原则。",
         en: "Let a clear question reveal a clear next move. Stay flexible without abandoning your principles.",
+      },
+      detail: detailedContent[String(id)]?.detail ?? {
+        "zh-TW": "這一卦提供一個觀察變化的入口。請把問題拆成現況、關係、可控行動與回顧時間，再決定下一步。",
+        "zh-CN": "这一卦提供一个观察变化的入口。请把问题拆成现况、关系、可控行动与回顾时间，再决定下一步。",
+        en: "This pattern offers a way to observe change. Break the question into reality, relationships, controllable action, and a review window before choosing the next move.",
       },
       keywords: { "zh-TW": keyword[0], "zh-CN": keyword[1], en: keyword[2] },
       action: { "zh-TW": actions[0], "zh-CN": actions[1], en: actions[2] },
