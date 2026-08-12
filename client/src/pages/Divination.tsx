@@ -1,10 +1,12 @@
 /* Style note: Treat the casting room as a quiet ritual interface: offset content, thin ink-like lines, gold change markers in dark mode, and no sensational claims. */
-import { useMemo, useState } from "react";
-import { ArrowDown, ArrowRight, Download, Info, RotateCcw, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowDown, ArrowRight, Clock3, Download, History, ImageDown, Info, RotateCcw, Sparkles, Trash2, X } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useLocale } from "../contexts/LocaleContext";
+import { useTheme } from "../contexts/ThemeContext";
+import { createShareCard, downloadBlob } from "../lib/shareCard";
 import { castCoins, getHexagramName, getHexagramProfile, type DivinationResult } from "../lib/zhouyi";
 
 const copy = {
@@ -33,6 +35,14 @@ const copy = {
     line: "第",
     lineAfter: "爻",
     changeNote: "金色標記代表變爻，提醒你留意局勢中正在移動的部分。",
+    share: "產生分享卡片",
+    generating: "正在排版…",
+    downloadAgain: "再次下載 PNG",
+    history: "起卦歷史",
+    historyNote: "紀錄只保存在這個瀏覽器，最多保留 20 筆。",
+    clearHistory: "清除紀錄",
+    noHistory: "完成第一次起卦後，這裡會留下你的問題與卦象軌跡。",
+    loadReading: "載入這次解讀",
   },
   "zh-CN": {
     eyebrow: "起卦室 / 04",
@@ -59,6 +69,14 @@ const copy = {
     line: "第",
     lineAfter: "爻",
     changeNote: "金色标记代表变爻，提醒你留意局势中正在移动的部分。",
+    share: "生成分享卡片",
+    generating: "正在排版…",
+    downloadAgain: "再次下载 PNG",
+    history: "起卦历史",
+    historyNote: "记录只保存在这个浏览器，最多保留 20 笔。",
+    clearHistory: "清除记录",
+    noHistory: "完成第一次起卦后，这里会留下你的问题与卦象轨迹。",
+    loadReading: "载入这次解读",
   },
   en: {
     eyebrow: "CASTING ROOM / 04",
@@ -85,8 +103,30 @@ const copy = {
     line: "Line",
     lineAfter: "",
     changeNote: "Gold marks indicate changing lines—the parts of the situation currently in motion.",
+    share: "Create share card",
+    generating: "Composing…",
+    downloadAgain: "Download PNG again",
+    history: "Reading history",
+    historyNote: "Saved only in this browser, up to 20 readings.",
+    clearHistory: "Clear history",
+    noHistory: "After your first cast, your questions and patterns will stay here as a trail.",
+    loadReading: "Load this reading",
   },
 } as const;
+
+type DivinationCopy = (typeof copy)[keyof typeof copy];
+const HISTORY_STORAGE_KEY = "cyber-zhouyi-reading-history";
+const MAX_HISTORY = 20;
+
+function readHistory(): DivinationResult[] {
+  try {
+    const stored = window.localStorage.getItem(HISTORY_STORAGE_KEY);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed.slice(0, MAX_HISTORY) : [];
+  } catch {
+    return [];
+  }
+}
 
 function LineGlyph({ yin, changing, index, locale }: { yin: boolean; changing: boolean; index: number; locale: "zh-TW" | "zh-CN" | "en" }) {
   return <div className="flex items-center gap-3" title={`${copy[locale].line} ${index + 1}`}><span className="w-10 text-right font-mono text-[10px] text-muted-foreground">{copy[locale].line} {index + 1}{copy[locale].lineAfter}</span><span className="relative flex flex-1 items-center gap-2">{yin ? <><span className="h-2 flex-1 bg-foreground/80" /><span className="h-2 w-8 bg-background" /><span className="h-2 flex-1 bg-foreground/80" /></> : <span className="h-2 w-full bg-foreground/80" />}{changing && <span className="absolute -right-2 size-3 rounded-full border-2 border-background bg-[color:var(--gold)] shadow-[0_0_0_2px_var(--gold)]" />}</span></div>;
@@ -96,12 +136,29 @@ function HexagramCard({ label, id, lines, locale, count }: { label: string; id: 
   return <div className="border border-border bg-card p-5 shadow-[0_16px_50px_rgba(41,31,24,0.06)] dark:border-[color:var(--gold)]/25 dark:bg-card/75 md:p-7"><div className="flex items-start justify-between"><div><p className="text-[10px] font-medium uppercase tracking-[0.24em] text-[color:var(--accent)] dark:text-[color:var(--gold)]">{label}</p><h3 className="mt-2 font-serif text-2xl">{getHexagramName(id, locale)}</h3></div><span className="font-mono text-xs text-muted-foreground">{String(id).padStart(2, "0")} / 64</span></div><div className="mt-8 space-y-3">{lines.slice().reverse().map((line, index) => <LineGlyph key={`${label}-${index}`} yin={line.yin} changing={Boolean(count && line.changing)} index={5 - index} locale={locale} />)}</div></div>;
 }
 
+function HistoryPanel({ history, locale, t, onLoad, onClear }: { history: DivinationResult[]; locale: "zh-TW" | "zh-CN" | "en"; t: DivinationCopy; onLoad: (entry: DivinationResult) => void; onClear: () => void }) {
+  return <section className="mt-7 border border-border bg-card/55 p-6 backdrop-blur-md dark:border-[color:var(--gold)]/20 dark:bg-card/45 sm:p-8"><div className="flex flex-col justify-between gap-4 border-b border-border pb-5 sm:flex-row sm:items-end"><div><div className="flex items-center gap-2 text-[color:var(--accent)] dark:text-[color:var(--gold)]"><History className="size-4" /><p className="text-[10px] font-medium uppercase tracking-[0.24em]">{t.history}</p></div><p className="mt-3 text-xs leading-6 text-muted-foreground">{t.historyNote}</p></div>{history.length > 0 && <Button type="button" variant="ghost" size="sm" onClick={onClear} className="w-fit rounded-none text-muted-foreground hover:text-destructive"><Trash2 className="mr-2 size-3.5" />{t.clearHistory}</Button>}</div>{history.length === 0 ? <div className="flex items-center gap-3 py-10 text-sm text-muted-foreground"><Clock3 className="size-4" />{t.noHistory}</div> : <div className="divide-y divide-border">{history.map((entry) => <button key={entry.createdAt} type="button" onClick={() => onLoad(entry)} className="group flex w-full items-center justify-between gap-4 py-5 text-left transition-colors hover:bg-background/60"><div className="min-w-0"><p className="truncate font-serif text-lg text-foreground group-hover:text-[color:var(--accent)] dark:group-hover:text-[color:var(--gold)]">{entry.question}</p><p className="mt-1 text-xs text-muted-foreground">{getHexagramName(entry.primaryId, locale)} → {getHexagramName(entry.relatingId, locale)} · {new Date(entry.createdAt).toLocaleDateString(locale)}</p></div><span className="shrink-0 text-xs font-semibold text-muted-foreground group-hover:text-foreground">{t.loadReading} <ArrowRight className="ml-1 inline size-3.5" /></span></button>)}</div>}</section>;
+}
+
 export default function Divination() {
   const { locale } = useLocale();
   const t = copy[locale];
   const [question, setQuestion] = useState("");
   const [isCasting, setIsCasting] = useState(false);
   const [result, setResult] = useState<DivinationResult | null>(null);
+  const [history, setHistory] = useState<DivinationResult[]>(readHistory);
+  const [isSharing, setIsSharing] = useState(false);
+  const [sharePreviewUrl, setSharePreviewUrl] = useState<string | null>(null);
+  const [shareBlob, setShareBlob] = useState<Blob | null>(null);
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    window.localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
+  }, [history]);
+
+  useEffect(() => () => {
+    if (sharePreviewUrl) URL.revokeObjectURL(sharePreviewUrl);
+  }, [sharePreviewUrl]);
 
   const primary = useMemo(() => result ? getHexagramProfile(result.primaryId) : null, [result]);
   const relating = useMemo(() => result ? getHexagramProfile(result.relatingId) : null, [result]);
@@ -110,7 +167,11 @@ export default function Divination() {
     if (!question.trim()) return;
     setIsCasting(true);
     window.setTimeout(() => {
-      setResult({ ...castCoins(), question: question.trim() });
+      const nextResult = { ...castCoins(), question: question.trim() };
+      setResult(nextResult);
+      setHistory((current) => [nextResult, ...current.filter((entry) => entry.createdAt !== nextResult.createdAt)].slice(0, MAX_HISTORY));
+      setSharePreviewUrl(null);
+      setShareBlob(null);
       setIsCasting(false);
     }, 1100);
   };
@@ -118,6 +179,39 @@ export default function Divination() {
   const reset = () => {
     setResult(null);
     setQuestion("");
+    setSharePreviewUrl(null);
+    setShareBlob(null);
+  };
+
+  const loadHistoryEntry = (entry: DivinationResult) => {
+    setResult(entry);
+    setQuestion(entry.question);
+    setSharePreviewUrl(null);
+    setShareBlob(null);
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    window.localStorage.removeItem(HISTORY_STORAGE_KEY);
+  };
+
+  const createAndDownloadShareCard = async () => {
+    if (!result || !primary || !relating) return;
+    setIsSharing(true);
+    try {
+      const blob = await createShareCard(result, primary, relating, locale, theme);
+      if (sharePreviewUrl) URL.revokeObjectURL(sharePreviewUrl);
+      setShareBlob(blob);
+      setSharePreviewUrl(URL.createObjectURL(blob));
+      downloadBlob(blob, `cyber-zhouyi-share-${new Date(result.createdAt).toISOString().slice(0, 10)}.png`);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const downloadShareCardAgain = () => {
+    if (!shareBlob || !result) return;
+    downloadBlob(shareBlob, `cyber-zhouyi-share-${new Date(result.createdAt).toISOString().slice(0, 10)}.png`);
   };
 
   const download = () => {
@@ -135,5 +229,5 @@ export default function Divination() {
   return <div className="relative overflow-hidden"><div className="mx-auto max-w-[1440px] px-5 py-16 md:px-10 md:py-24 lg:px-14"><div className="grid grid-cols-1 gap-14 lg:grid-cols-[0.34fr_0.66fr] lg:gap-20"><aside className="lg:sticky lg:top-28 lg:h-fit"><div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.25em] text-[color:var(--accent)] dark:text-[color:var(--gold)]"><span className="h-px w-8 bg-current" />{t.eyebrow}</div><h1 className="mt-6 max-w-lg font-serif text-5xl leading-[1.02] tracking-[-0.04em] sm:text-6xl">{t.title}</h1><p className="mt-7 max-w-md text-base leading-8 text-muted-foreground">{t.intro}</p><div className="mt-10 border-l border-[color:var(--accent)]/50 pl-4 text-xs leading-6 text-muted-foreground dark:border-[color:var(--gold)]/50"><div className="flex items-center gap-2 font-medium text-foreground"><Info className="size-4" />{t.coin}</div><p className="mt-2">{t.note}</p><div className="mt-5 flex max-w-[220px] items-center gap-2 opacity-65">{[0, 1, 0, 1, 1, 0].map((line, index) => <span key={index} className={`h-1 flex-1 ${line ? "bg-foreground" : "border border-foreground/50"}`} />)}</div></div><Link href="/" className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-[color:var(--accent)] dark:hover:text-[color:var(--gold)]"><ArrowDown className="size-4" />{t.back}</Link></aside>
 
 <div className="min-w-0">{!result ? <section className="relative overflow-hidden border border-border bg-card/70 p-6 shadow-[0_24px_70px_rgba(41,31,24,0.07)] backdrop-blur-md dark:border-[color:var(--gold)]/25 dark:bg-card/65 sm:p-10"><div className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full border border-[color:var(--accent)]/20 dark:border-[color:var(--gold)]/25" /><div className="pointer-events-none absolute right-7 top-9 flex w-20 flex-col gap-1.5 opacity-40">{[1, 0, 1, 1, 0, 1].map((line, index) => <span key={index} className={`h-1 ${line ? "bg-foreground" : "bg-transparent"}`} />)}</div><div className="relative mb-12 flex items-center justify-between border-b border-border pb-5"><div><span className="font-serif text-xl">{t.prompt}</span><span className="ml-3 font-mono text-[10px] text-muted-foreground">64 / 06</span></div><span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">LOCAL / REFLECT</span></div><Textarea value={question} onChange={(event) => setQuestion(event.target.value)} placeholder={t.placeholder} className="min-h-44 resize-none rounded-none border-0 border-b border-border bg-transparent px-0 py-3 text-xl leading-9 shadow-none focus-visible:ring-0 sm:text-2xl" maxLength={240} /><div className="mt-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-center"><p className="max-w-sm text-xs leading-5 text-muted-foreground">{t.disclaimer}</p><Button onClick={startCast} disabled={!question.trim() || isCasting} className="group h-12 rounded-none bg-foreground px-6 text-background hover:bg-foreground/90">{isCasting ? <><Sparkles className="mr-2 size-4 animate-pulse" />{t.casting}</> : <>{t.cast}<ArrowRight className="ml-3 size-4 transition-transform group-hover:translate-x-1" /></>}</Button></div></section> : <section className="animate-in fade-in slide-in-from-bottom-4 duration-500"><div className="flex flex-col justify-between gap-4 border-b border-border pb-6 md:flex-row md:items-end"><div><p className="text-xs font-medium uppercase tracking-[0.25em] text-[color:var(--accent)] dark:text-[color:var(--gold)]">{t.result}</p><h2 className="mt-3 max-w-3xl font-serif text-3xl leading-tight sm:text-5xl">{result.question}</h2></div><span className="font-mono text-[10px] text-muted-foreground">{new Date(result.createdAt).toLocaleString(locale)}</span></div><div className="mt-7 grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center"><HexagramCard label={t.primary} id={result.primaryId} lines={result.lines} locale={locale} count={result.changingLines.length} /><div className="mx-auto grid size-11 place-items-center rounded-full border border-border bg-background text-muted-foreground"><ArrowRight className="size-4 md:block" /><ArrowDown className="size-4 md:hidden" /></div><HexagramCard label={t.relating} id={result.relatingId} lines={result.lines.map((line) => ({ ...line, yin: line.changing ? !line.yin : line.yin, changing: false }))} locale={locale} /></div><p className="mt-4 text-xs leading-6 text-muted-foreground">{t.changeNote}</p>
-<div className="mt-12 grid grid-cols-1 gap-px border border-border bg-border md:grid-cols-2"><div className="bg-card p-7 sm:p-9"><p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[color:var(--accent)] dark:text-[color:var(--gold)]">{t.reading}</p><h3 className="mt-3 font-serif text-3xl">{primary?.theme[locale]}</h3><p className="mt-5 text-sm leading-8 text-muted-foreground">{primary?.reading[locale]}</p><p className="mt-6 border-l-2 border-[color:var(--accent)]/60 pl-4 text-sm leading-7 text-foreground dark:border-[color:var(--gold)]/60">{primary?.advice[locale]}</p></div><div className="bg-card p-7 sm:p-9"><p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[color:var(--accent)] dark:text-[color:var(--gold)]">{t.keywords}</p><div className="mt-5 flex flex-wrap gap-2">{primary?.keywords[locale].map((keyword) => <span key={keyword} className="border border-border px-3 py-1.5 text-xs text-muted-foreground">{keyword}</span>)}</div><p className="mt-10 text-[10px] font-medium uppercase tracking-[0.22em] text-[color:var(--accent)] dark:text-[color:var(--gold)]">{t.direction}</p><div className="mt-5 space-y-4">{primary?.action[locale].map((item, index) => <div key={item} className="flex gap-3 text-sm leading-7"><span className="font-mono text-xs text-muted-foreground">0{index + 1}</span><p>{item}</p></div>)}</div></div></div><div className="mt-7 flex flex-col justify-between gap-4 border-t border-border pt-6 sm:flex-row sm:items-center"><p className="max-w-xl text-xs leading-6 text-muted-foreground">{t.disclaimer}</p><div className="flex gap-2"><Button type="button" variant="outline" className="h-11 rounded-none" onClick={download}><Download className="mr-2 size-4" />{t.download}</Button><Button type="button" variant="outline" className="h-11 rounded-none" onClick={reset}><RotateCcw className="mr-2 size-4" />{t.again}</Button></div></div></section>}</div></div></div><div className="absolute -right-28 top-20 -z-10 size-72 rounded-full border border-[color:var(--accent)]/15 dark:border-[color:var(--gold)]/15" /></div>;
+<div className="mt-12 grid grid-cols-1 gap-px border border-border bg-border md:grid-cols-2"><div className="bg-card p-7 sm:p-9"><p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[color:var(--accent)] dark:text-[color:var(--gold)]">{t.reading}</p><h3 className="mt-3 font-serif text-3xl">{primary?.theme[locale]}</h3><p className="mt-5 text-sm leading-8 text-muted-foreground">{primary?.reading[locale]}</p><p className="mt-6 border-l-2 border-[color:var(--accent)]/60 pl-4 text-sm leading-7 text-foreground dark:border-[color:var(--gold)]/60">{primary?.advice[locale]}</p></div><div className="bg-card p-7 sm:p-9"><p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[color:var(--accent)] dark:text-[color:var(--gold)]">{t.keywords}</p><div className="mt-5 flex flex-wrap gap-2">{primary?.keywords[locale].map((keyword) => <span key={keyword} className="border border-border px-3 py-1.5 text-xs text-muted-foreground">{keyword}</span>)}</div><p className="mt-10 text-[10px] font-medium uppercase tracking-[0.22em] text-[color:var(--accent)] dark:text-[color:var(--gold)]">{t.direction}</p><div className="mt-5 space-y-4">{primary?.action[locale].map((item, index) => <div key={item} className="flex gap-3 text-sm leading-7"><span className="font-mono text-xs text-muted-foreground">0{index + 1}</span><p>{item}</p></div>)}</div></div></div><div className="mt-7 flex flex-col justify-between gap-4 border-t border-border pt-6 sm:flex-row sm:items-center"><p className="max-w-xl text-xs leading-6 text-muted-foreground">{t.disclaimer}</p><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" className="h-11 rounded-none" onClick={download}><Download className="mr-2 size-4" />{t.download}</Button><Button type="button" variant="outline" className="h-11 rounded-none" onClick={createAndDownloadShareCard} disabled={isSharing}>{isSharing ? <Sparkles className="mr-2 size-4 animate-pulse" /> : <ImageDown className="mr-2 size-4" />}{isSharing ? t.generating : t.share}</Button><Button type="button" variant="outline" className="h-11 rounded-none" onClick={reset}><RotateCcw className="mr-2 size-4" />{t.again}</Button></div></div>{sharePreviewUrl && <div className="mt-7 border border-[color:var(--accent)]/45 bg-background/70 p-5 backdrop-blur-md dark:border-[color:var(--gold)]/35 dark:bg-background/55 sm:p-7"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-medium uppercase tracking-[0.24em] text-[color:var(--accent)] dark:text-[color:var(--gold)]">SHARE CARD / PNG</p><p className="mt-2 text-sm text-muted-foreground">{t.downloadAgain}</p></div><button type="button" className="rounded-full p-2 text-muted-foreground hover:bg-accent" onClick={() => setSharePreviewUrl(null)} aria-label="Close preview"><X className="size-4" /></button></div><div className="mt-5 grid place-items-center overflow-hidden border border-border bg-muted/40 p-3"><img src={sharePreviewUrl} alt="Generated Zhouyi share card" className="max-h-[620px] w-full max-w-[480px] object-contain" /></div><Button type="button" variant="outline" className="mt-5 h-11 rounded-none" onClick={downloadShareCardAgain}><Download className="mr-2 size-4" />{t.downloadAgain}</Button></div>}</section>}<HistoryPanel history={history} locale={locale} t={t} onLoad={loadHistoryEntry} onClear={clearHistory} /></div></div></div><div className="absolute -right-28 top-20 -z-10 size-72 rounded-full border border-[color:var(--accent)]/15 dark:border-[color:var(--gold)]/15" /></div>;
 }
