@@ -3,12 +3,17 @@
 - [x] 建立可發布包與 GitHub Pages 作流
 - [x] 驗證打包內容與部署前置條件
 - [x] 交付文案、打包檔與安全部署說明
-- [ ] 確認 GitHub 儲存庫 URL、部署專案與安全授權方式
+- [x] 確認 GitHub 儲存庫 URL、部署專案與安全授權方式
 - [x] 設計 GitHub Actions Pages 部署與本機安全推送架構
 - [x] 建立自動化部署工作流與本機推送腳本
 - [x] 驗證 YAML、腳本與 production build
 - [x] 交付不暴露 Token 的部署使用步驟
-- [ ] 檢查 GitHub Pages 相容設定並建立提交
-- [ ] 推送專案到指定 GitHub 儲存庫
-- [ ] 啟用並驗證 GitHub Pages
-- [ ] 交付倉庫與網站網址
+- [x] 檢查 GitHub Pages 相容設定並建立提交
+- [x] 推送專案到指定 GitHub 儲存庫
+- [x] 啟用並驗證 GitHub Pages
+- [x] 交付倉庫與網站網址
+- [ ] 診斷 GitHub Pages 子路徑與失效圖片引用
+- [ ] 將品牌圖片納入可發布資產並修正連結
+- [ ] 重新建置推送並執行 GitHub Pages 部署
+- [ ] 驗證首頁、起卦頁與圖片 HTTP 狀態
+- [ ] 交付修正後網址與變更說明

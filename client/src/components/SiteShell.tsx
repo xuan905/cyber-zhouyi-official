@@ -30,7 +30,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-[1440px] items-center justify-between px-5 py-4 md:px-10 lg:px-14">
           <Link href="/" className="group flex items-center gap-3" onClick={() => setMenuOpen(false)}>
             <span className="relative grid size-10 place-items-center overflow-hidden border border-foreground/20 bg-foreground shadow-[0_8px_24px_rgba(28,25,23,0.14)] transition-transform duration-300 group-hover:-rotate-6">
-              <img src="/manus-storage/cyber-zhouyi-mark_3571c1cb.png" alt="" className="size-full object-cover" />
+              <img src={`${import.meta.env.BASE_URL}assets/cyber-zhouyi-mark.svg`} alt="" className="size-full object-cover" />
             </span>
             <span>
               <span className="block font-serif text-lg font-semibold tracking-[0.18em]">賽博周易</span>
@@ -45,7 +45,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
           <nav className={`${menuOpen ? "absolute left-0 right-0 top-full flex border-b border-border bg-background px-5 pb-5 pt-3 shadow-lg" : "hidden"} flex-col gap-4 md:static md:flex md:flex-row md:items-center md:border-0 md:bg-transparent md:p-0 md:shadow-none`} aria-label="Primary">
             <Link href="/" onClick={() => setMenuOpen(false)} className={`text-sm transition-colors ${location === "/" ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"}`}>{copy.home}</Link>
             <Link href="/divination" onClick={() => setMenuOpen(false)} className={`text-sm transition-colors ${location === "/divination" ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"}`}>{copy.divination}</Link>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground">{copy.github}<ArrowUpRight className="size-3" /></a>
+            <a href="https://github.com/xuan905/cyber-zhouyi-official" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground">{copy.github}<ArrowUpRight className="size-3" /></a>
 
             <span className="hidden h-5 w-px bg-border md:block" />
             <div className="flex items-center gap-1">

@@ -1,6 +1,7 @@
 /* Style note: Neo-Orientalism editorial landing page. Use quiet ivory space in light mode, obsidian/gold contrast in dark mode, and asymmetrical composition over generic centered cards. */
 import { ArrowRight, ArrowUpRight, BookOpen, GitBranch, Layers3, MoveUpRight, ShieldCheck, Sparkles } from "lucide-react";
 import { Link } from "wouter";
+import type { CSSProperties } from "react";
 import { useLocale } from "../contexts/LocaleContext";
 
 const heroCopy = {
@@ -87,10 +88,11 @@ const heroCopy = {
 export default function Home() {
   const { locale } = useLocale();
   const copy = heroCopy[locale];
+  const heroStyle = { "--hero-image": `url("${import.meta.env.BASE_URL}assets/cyber-zhouyi-hero.jpg")` } as CSSProperties;
   return (
     <div>
       <section className="relative isolate overflow-hidden border-b border-border/70">
-        <div className="absolute inset-0 -z-20 bg-[image:var(--hero-image)] bg-cover bg-right bg-no-repeat opacity-80 dark:opacity-40" />
+        <div style={heroStyle} className="absolute inset-0 -z-20 bg-[image:var(--hero-image)] bg-cover bg-right bg-no-repeat opacity-80 dark:opacity-40" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-background via-background/95 to-background/10 dark:from-background dark:via-background/80 dark:to-background/10" />
         <div className="mx-auto grid min-h-[calc(100vh-73px)] max-w-[1440px] grid-cols-1 items-center px-5 py-20 md:grid-cols-[minmax(0,0.95fr)_minmax(300px,0.7fr)] md:px-10 md:py-24 lg:px-14">
           <div className="max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
