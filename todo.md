@@ -38,7 +38,13 @@
 - [x] 驗證 ClawHub 公開頁面與安裝指令
 - [x] 交付 ClawHub 發布網址與使用說明
 
-- [ ] 檢查 zhouyi-site-skill 目前 metadata 關鍵字
-- [ ] 在 ClawHub 加入易經、六爻與 decision-support 等搜尋關鍵字
-- [ ] 驗證公開頁面 metadata 更新
-- [ ] 交付 metadata 更新結果
+- [x] 檢查 zhouyi-site-skill 目前 metadata 關鍵字
+- [x] 在 ClawHub 加入易經、六爻與 decision-support 等搜尋關鍵字
+- [x] 驗證公開頁面 metadata 更新
+- [x] 交付 metadata 更新結果
+
+- [x] 檢查 GitHub 儲存庫目前文件與專案資訊
+- [x] 撰寫並加入 README.md 專案說明
+- [ ] 提交並推送 README 更新至 GitHub
+- [ ] 驗證 GitHub 公開 README 與連結
+- [ ] 交付 README 更新結果與網址
