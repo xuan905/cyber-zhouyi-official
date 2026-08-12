@@ -45,6 +45,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
           <nav className={`${menuOpen ? "absolute left-0 right-0 top-full flex border-b border-border bg-background px-5 pb-5 pt-3 shadow-lg" : "hidden"} flex-col gap-4 md:static md:flex md:flex-row md:items-center md:border-0 md:bg-transparent md:p-0 md:shadow-none`} aria-label="Primary">
             <Link href="/" onClick={() => setMenuOpen(false)} className={`text-sm transition-colors ${location === "/" ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"}`}>{copy.home}</Link>
             <Link href="/divination" onClick={() => setMenuOpen(false)} className={`text-sm transition-colors ${location === "/divination" ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"}`}>{copy.divination}</Link>
+            <Link href="/guide" onClick={() => setMenuOpen(false)} className={`text-sm transition-colors ${location === "/guide" ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"}`}>{copy.guide}</Link>
             <a href="https://github.com/xuan905/cyber-zhouyi-official" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground">{copy.github}<ArrowUpRight className="size-3" /></a>
 
             <span className="hidden h-5 w-px bg-border md:block" />
