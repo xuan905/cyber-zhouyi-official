@@ -37,3 +37,8 @@
 - [x] 檢查發布預覽並提交 ClawHub 發布
 - [x] 驗證 ClawHub 公開頁面與安裝指令
 - [x] 交付 ClawHub 發布網址與使用說明
+
+- [ ] 檢查 zhouyi-site-skill 目前 metadata 關鍵字
+- [ ] 在 ClawHub 加入易經、六爻與 decision-support 等搜尋關鍵字
+- [ ] 驗證公開頁面 metadata 更新
+- [ ] 交付 metadata 更新結果
