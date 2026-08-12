@@ -27,3 +27,13 @@
 - [x] 批次擴充 JSON 內容並接入快速載入互動
 - [x] 驗證資料完整性、多語系與響應式體驗
 - [x] 部署更新並交付資料與快速載入功能
+- [x] 檢視 AI_Skills 網站結構與現有卡片樣式
+- [x] 設計賽博周易 Skill 卡片內容與連結
+- [x] 修改 AI_Skills 專案並推送至 GitHub
+- [x] 驗證公開首頁卡片與連結可用性
+- [x] 交付卡片更新與公開網址
+- [x] 確認 GitHub Skill 文件與 ClawHub 掃描結果
+- [x] 在 ClawHub 匯入頁只選取 zhouyi-site-skill
+- [x] 檢查發布預覽並提交 ClawHub 發布
+- [x] 驗證 ClawHub 公開頁面與安裝指令
+- [x] 交付 ClawHub 發布網址與使用說明
