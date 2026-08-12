@@ -48,3 +48,9 @@
 - [x] 提交並推送 README 更新至 GitHub
 - [x] 驗證 GitHub 公開 README 與連結
 - [x] 交付 README 更新結果與網址
+
+- [x] 檢查現有 README 結構與待辦狀態
+- [x] 撰寫 README_EN.md 並加入中英文切換連結
+- [ ] 檢查 Markdown 並提交推送至 GitHub
+- [ ] 驗證 GitHub 公開雙語 README 與切換連結
+- [ ] 交付雙語 README 更新結果

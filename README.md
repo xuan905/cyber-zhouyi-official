@@ -1,5 +1,7 @@
 # 賽博周易 Cyber Zhouyi Official
 
+[繁體中文](./README.md) | [English](./README_EN.md)
+
 > 把《易經》的觀察框架轉成可重複使用的 AI Skill，讓問題被看見，讓方向回到生活。
 
 [![Live Site](https://img.shields.io/badge/Live%20Site-GitHub%20Pages-8C6239?style=flat-square)](https://xuan905.github.io/cyber-zhouyi-official/)
