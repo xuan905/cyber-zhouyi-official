@@ -45,6 +45,6 @@
 
 - [x] 檢查 GitHub 儲存庫目前文件與專案資訊
 - [x] 撰寫並加入 README.md 專案說明
-- [ ] 提交並推送 README 更新至 GitHub
-- [ ] 驗證 GitHub 公開 README 與連結
-- [ ] 交付 README 更新結果與網址
+- [x] 提交並推送 README 更新至 GitHub
+- [x] 驗證 GitHub 公開 README 與連結
+- [x] 交付 README 更新結果與網址
