@@ -15,6 +15,8 @@ const PROJECT_ROOT = import.meta.dirname;
 const LOG_DIR = path.join(PROJECT_ROOT, ".manus-logs");
 const MAX_LOG_SIZE_BYTES = 1 * 1024 * 1024; // 1MB per log file
 const TRIM_TARGET_BYTES = Math.floor(MAX_LOG_SIZE_BYTES * 0.6); // Trim to 60% to avoid constant re-trimming
+const githubRepositoryName = process.env.GITHUB_REPOSITORY?.split("/")[1] ?? "";
+const pagesBase = process.env.VITE_BASE_PATH || (process.env.GITHUB_ACTIONS === "true" && githubRepositoryName && !githubRepositoryName.endsWith(".github.io") ? `/${githubRepositoryName}/` : "/");
 
 type LogSource = "browserConsole" | "networkRequests" | "sessionReplay";
 
@@ -206,6 +208,7 @@ function vitePluginStorageProxy(): Plugin {
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()];
 
 export default defineConfig({
+  base: pagesBase,
   plugins,
   resolve: {
     alias: {
